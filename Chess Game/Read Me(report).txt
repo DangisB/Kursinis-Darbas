@@ -1,0 +1,261 @@
+a. What is your application?
+My application is a chess game implemented in Python using the Pygame library. 
+It provides a graphical interface for players to play chess, featuring all standard chess pieces and moves. 
+The game includes the basic functionalities of chess, including piece movement, capturing, and turn-based gameplay.
+
+b. How to run the program?
+1. Install Python: Ensure you have Python installed on your system. You can download it from python.org.
+2. Install Pygame: Install the Pygame library using pip: pip install pygame
+3. Prepare the directory: Ensure you have the following files in the same directory: ChessMain.py, ChessEngine.py and 
+a folder named images containing images of the chess pieces (e.g., wP.png, bK.png).
+4. Run the game: Execute the following command in your terminal or command prompt:python ChessMain.py
+
+c. How to use the program?
+1. Start the Game: When you run the program, a chessboard will appear on the screen.
+2. Select and Move Pieces: Click on a piece to select it, and click on a destination square to move it. The game will only allow valid moves according to the rules of chess.
+3. Undo Move: Press the 'z' key to undo the last move.
+4. Exit the Game: Close the window or press the close button to exit the game.
+
+Body/Analysis
+a. Explain how the program covers (implements) functional requirements
+
+1. Polymorphism:
+
+Description: Meaning: Polymorphism allows methods to do different things based on the object it is acting upon, even though they share the same interface.
+Usage in Code: Polymorphism is partly demonstrated in  GameState class through the use of the moveFunctions dictionary, which maps pieces to their respective move functions. 
+This allows us to call the appropriate method based on the type of piece.
+class GameState:
+    def __init__(self):
+        ...
+        self.moveFunctions = {'P': self.getPawnMoves, 'R': self.getRookMoves, 'N': self.getKnightMoves,
+                              'B': self.getBishopMoves, 'Q': self.getQueenMoves, 'K': self.getKingMoves}
+
+    def getAllPossibleMoves(self):
+        moves = []
+        for r in range(len(self.board)):
+            for c in range(len(self.board[r])):
+                piece = self.board[r][c][1]
+                if (self.board[r][c][0] == 'w' and self.whiteToMove) or (self.board[r][c][0] == 'b' and not self.whiteToMove):
+                    self.moveFunctions[piece](r, c, moves)
+        return moves
+
+2. Abstraction
+
+Meaning: Abstraction is the concept of hiding the complex implementation details and showing only the necessary features of an object.
+Usage in Code: Abstraction is demonstrated in the GameState class, which hides the details of the game state and provides a high-level interface to interact with it.
+class GameState:
+    def __init__(self):
+        self.board = [
+            ...
+        ]
+        self.whiteToMove = True
+        self.moveLog = []
+
+    def makeMove(self, move):
+        self.board[move.startRow][move.startCol] = "--"
+        self.board[move.endRow][move.endCol] = move.pieceMoved
+        self.moveLog.append(move)
+        self.whiteToMove = not self.whiteToMove
+
+    def undoMove(self):
+        if self.moveLog:
+            move = self.moveLog.pop()
+            self.board[move.startRow][move.startCol] = move.pieceMoved
+            self.board[move.endRow][move.endCol] = move.pieceCaptured
+            self.whiteToMove = not self.whiteToMove
+3. Inheritance
+
+Meaning: Inheritance is a mechanism by which one class inherits the properties and behaviors of another class.
+Usage in Code: Inheritance could be used while giving chess pieces its own class and giving its features to the Queen piece which takes rook and bishop moves.
+def getQueenMoves(self, r, c, moves):
+        self.getRookMoves(r, c, moves)
+        self.getBishopMoves(r, c, moves)
+4. Encapsulation
+
+Meaning: Encapsulation is the bundling of data and methods that operate on the data within one unit, and restricting access to some of the object's components.
+Usage in Code: Encapsulation is demonstrated through the use of private variables and methods within the GameState class. 
+class GameState:
+    def __init__(self):
+        self._board = [
+            ...
+        ]
+        self._whiteToMove = True
+        self._moveLog = []
+
+    def makeMove(self, move):
+        self._board[move.startRow][move.startCol] = "--"
+        self._board[move.endRow][move.endCol] = move.pieceMoved
+        self._moveLog.append(move)
+        self._whiteToMove = not self._whiteToMove
+
+    def undoMove(self):
+        if self._moveLog:
+            move = self._moveLog.pop()
+            self._board[move.startRow][move.startCol] = move.pieceMoved
+            self._board[move.endRow][move.endCol] = move.pieceCaptured
+            self._whiteToMove = not self._whiteToMove
+Design patterns (Singleton Pattern and Factory Method Pattern)
+1. Adapter Pattern
+Explanation: The Adapter pattern allows incompatible interfaces to work together. It acts as a bridge between two interfaces, making them compatible.
+Application in Code
+Your drawBoard and drawPieces functions act as adapters that translate the internal game state representation into a visual format suitable for rendering with Pygame. 
+They take the abstract board representation from GameState and adapt it for Pygame's rendering methods. Code example:
+
+def drawBoard(screen):
+    colors = [p.Color("white"), p.Color("gray")]
+    for r in range(DIMENSION):
+        for c in range(DIMENSION):
+            color = colors[((r + c) % 2)]
+            p.draw.rect(screen, color, p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
+def drawPieces(screen, board):
+    for r in range(DIMENSION):
+        for c in range(DIMENSION):
+            piece = board[r][c]
+            if piece != "--":
+                screen.blit(IMAGES[piece], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
+2. Singleton Pattern
+Explanation: The Singleton pattern ensures that a class has only one instance and provides a global point of access to it.
+Application in Code: Pygame initialization and the main loop control the entire game and its state. 
+While not explicitly a Singleton, the main game loop and the initialization ensure only one instance of the game runs at a time, which is the essence of Singleton.
+Code example:
+
+def main():
+    p.init()
+    screen = p.display.set_mode((WIDTH, HEIGHT))
+    clock = p.time.Clock()
+    screen.fill(p.Color("white"))
+    gs = GameState()
+    loadImages()
+    running = True
+    while running:
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                running = False
+        drawGameState(screen, gs)
+        clock.tick(MAX_FPS)
+        p.display.flip()
+
+Reading from file:
+
+We implemented images folder which holds how pieces look and in the code example we can see it being called by theyr names in folder:
+def loadImages():
+    pieces = ['wP', 'wR', 'wN', 'wB', 'wK', 'wQ', 'bP', 'bR', 'bN', 'bB', 'bK', 'bQ']
+    for piece in pieces:
+        IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
+
+Writing to file:
+
+It shows how moves are written to the MoveLibrary.txt file when a valid move is made
+# Open the MoveLibrary.txt file in append mode
+with open("MoveLibrary.txt", "a") as file:
+    while running:
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                running = False
+            # mouse handler
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos()
+                col = location[0] // SQ_SIZE
+                row = location[1] // SQ_SIZE
+                if sqSelected == (row, col):  # check if the user clicked the same square twice
+                    sqSelected = ()  # deselect
+                    playerClicks = []  # clear player clicks
+                else:
+                    sqSelected = (row, col)
+                    playerClicks.append(sqSelected)  # append for both 1st and 2nd clicks
+                if len(playerClicks) == 2:  # after 2nd click this works
+                    move = Move(playerClicks[0], playerClicks[1], gs.board)
+                    print(move.getChessNotation())
+                    if move in validMoves:
+                        gs.makeMove(move)
+                        moveMade = True
+                        # Write the move to the file
+                        file.write(move.getChessNotation() + "\n")
+                    sqSelected = ()  # reset user clicks or the loop continues forever
+                    playerClicks = []
+            # key handlers
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_z:  # undo when 'z' is pressed
+                    gs.undoMove()
+                    moveMade = True
+Testing:
+While writing the code i used the code as in example to see if everything was working correctly:
+
+import unittest
+from ChessEngine import GameState, Move
+
+class TestChessEngine(unittest.TestCase):
+
+    def setUp(self):
+        self.gs = GameState()
+
+    def test_initial_board_setup(self):
+        """Test the initial setup of the board."""
+        expected_board = [
+            ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
+            ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
+            ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
+        ]
+        self.assertEqual(self.gs.board, expected_board)
+
+    def test_move_making(self):
+        """Test making a move."""
+        move = Move((6, 4), (4, 4), self.gs.board)  # e2e4
+        self.gs.makeMove(move)
+        self.assertEqual(self.gs.board[4][4], 'wP')
+        self.assertEqual(self.gs.board[6][4], '--')
+
+    def test_move_undoing(self):
+        """Test undoing a move."""
+        move = Move((6, 4), (4, 4), self.gs.board)  # e2e4
+        self.gs.makeMove(move)
+        self.gs.undoMove()
+        self.assertEqual(self.gs.board[6][4], 'wP')
+        self.assertEqual(self.gs.board[4][4], '--')
+
+    def test_move_logging(self):
+        """Test if the moves are logged to the file correctly."""
+        move = Move((6, 4), (4, 4), self.gs.board)  # e2e4
+        move_notation = move.getChessNotation()
+        with open("MoveLibrary.txt", "w") as file:
+            file.write(move_notation + "\n")
+        with open("MoveLibrary.txt", "r") as file:
+            logged_moves = file.readlines()
+        self.assertEqual(logged_moves[-1].strip(), move_notation)
+
+if __name__ == "__main__":
+    unittest.main()
+
+By running these tests I got these results:
+
+test_initial_board_setup: Verifies the initial board setup is correct.
+test_move_making: Ensures that making a move updates the board state correctly.
+test_move_undoing: Ensures that undoing a move restores the board state correctly.
+test_move_logging: Tests if moves are correctly written to MoveLibrary.txt.
+
+Results and Summary
+a. Results
+1. Successfully implemented a basic chess game with graphical representation using Pygame.
+2. Ensured valid moves for different chess pieces and implemented basic game functionalities.
+3. Applied object-oriented programming principles effectively in the project.
+
+b. Conclusions
+1. The project demonstrates a solid understanding and application of OOP principles: polymorphism, abstraction, inheritance, and encapsulation.
+2. Implementing design patterns like Singleton and Factory Method improved the structure and maintainability of the code.
+3. The game provides a functional and interactive chess-playing experience.
+
+c. How it would be possible to extend your application?
+1. AI Opponent: Implement an AI opponent to allow single-player mode.
+2. Advanced Chess Rules: Add support for special moves such as castling, en passant, and pawn promotion.
+3. Multiplayer Support: Enable online multiplayer functionality using a server-client architecture.
+4. Enhanced Graphics: Improve the user interface and add animations for piece movements.
+By addressing these future extensions, the application can become more comprehensive and user-friendly, providing a richer experience for chess enthusiasts.
+
+
